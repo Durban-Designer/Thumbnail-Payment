@@ -1,13 +1,19 @@
 <template>
   <div class="main">
-    <div class="form-row" v-if="modal!=='thanks'">
-      <h3>Total: {{invoice.ammount}}</h3>
+    <div class="form-row" v-if="modal!=='thanks' && modal!=='alreadyPaid'">
+      <h3>Total: ${{invoice.amount}}</h3>
+      <p>To be paid to Thumbnail Consulting by {{invoice.clientName}} for;</p>
+      <p>{{invoice.description}}</p>
       <div id="card-element"></div>
       <div id="card-errors" role="alert"></div>
       <button class="submit" v-on:click="submitCard" v-if="modal==='payment'">Submit Payment</button>
     </div>
     <div v-if="modal==='thanks'">
       <h1 class="thanks">Thank you for the Payment!!</h1>
+      <button class="back" v-on:click="$router.push('/')">Go Back</button>
+    </div>
+    <div v-if="modal==='alreadyPaid'">
+      <h1 class="thanks">This Invoice has already been Paid on {{invoice.timePaid}}, Thank you for your timely payment!!</h1>
       <button class="back" v-on:click="$router.push('/')">Go Back</button>
     </div>
   </div>
@@ -17,18 +23,18 @@
 import axios from 'axios'
 
 export default {
-  name: 'donate',
+  name: 'payment',
+  props: ['invoiceid'],
   data () {
     return {
       modal: '',
       stripe: '',
-      ammount: '',
       card: '',
       payment: '',
       stripeToken: '',
       error: '',
       invoice: {
-        ammount: '',
+        amount: '',
         description: '',
         clientName: '',
         timeIssued: '',
@@ -39,13 +45,31 @@ export default {
     }
   },
   created () {
-    this.stripeSetup()
+    let vue = this
+    axios.get('https://api.thumbnailconsulting.com/invoices/' + vue.invoiceid)
+      .then(response => {
+        vue.invoice.amount = (parseInt(response.data.amount) / 100)
+        vue.invoice.description = response.data.description
+        vue.invoice.clientName = response.data.customerName
+        vue.invoice.timeIssued = response.data.timeIssued
+        vue.invoice.timePaid = response.data.timePaid
+        vue.invoice.paid = response.data.paid
+        if (vue.invoice.paid !== true) {
+          vue.stripeSetup()
+        } else {
+          vue.modal = 'alreadyPaid'
+        }
+      })
+      .catch(err => {
+        console.log(err)
+        vue.$router.push('/')
+      })
   },
   methods: {
     stripeSetup () {
       let vue = this
-      vue.modal = 'donate'
-      vue.stripe = window.Stripe('pk_test_GfHvaGfRpGmaHgrzGAecyh2D')
+      vue.modal = 'payment'
+      vue.stripe = window.Stripe('pk_test_EUZwPeinKym4DDl0d9kMbrOw')
       var elements = vue.stripe.elements()
       var style = {
         base: {
@@ -89,19 +113,17 @@ export default {
     stripeTokenHandler (token) {
       let vue = this
       vue.stripeToken = token
-      vue.ammount = parseInt(vue.ammount)
-      vue.ammount = 100 * vue.ammount
-      // https://api.endlesslovegraceandmercy.org
-      axios.post('http://localhost:81/donate', {
-        ammount: vue.ammount,
-        stripeToken: vue.stripeToken
+      axios.post('https://api.thumbnailconsulting.com/invoices/pay', {
+        invoiceid: vue.invoiceid,
+        stripeToken: vue.stripeToken,
+        timePaid: new Date()
       })
-        .then(function () {
+        .then(response => {
           vue.error = false
           vue.payment = true
           vue.modal = 'thanks'
         })
-        .catch(function (error) {
+        .catch(error => {
           console.log(error)
           vue.error = true
         })

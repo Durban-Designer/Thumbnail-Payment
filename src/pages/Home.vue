@@ -1,12 +1,20 @@
 <template>
   <div class="main">
-    <h2>Home</h2>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'home'
+  name: 'home',
+  props: ['logged'],
+  created () {
+    let vue = this
+    if (vue.logged === false) {
+      vue.$router.push('/login')
+    } else {
+      vue.$router.push('/invoice')
+    }
+  }
 }
 </script>
 
