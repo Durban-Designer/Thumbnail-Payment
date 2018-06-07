@@ -59,8 +59,8 @@ router.post("/", passport.authenticate('jwt', { session: false }), (req,res) => 
               ignoreTLS: false,
               requireTLS: true,
               auth: {
-                  user: 'royce.birnbaum@thumbnailconsulting.com',
-                  pass: 'Soralove13'
+                  user: '',
+                  pass: ''
               },
               tls: {
                   ciphers: 'SSLv3'

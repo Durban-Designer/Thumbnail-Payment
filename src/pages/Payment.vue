@@ -116,7 +116,7 @@ export default {
       axios.post('https://api.thumbnailconsulting.com/invoices/pay', {
         invoiceid: vue.invoiceid,
         stripeToken: vue.stripeToken,
-        timePaid: new Date()
+        timePaid: new Date().toLocaleString()
       })
         .then(response => {
           vue.error = false

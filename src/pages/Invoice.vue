@@ -45,7 +45,7 @@ export default {
         customerEmail: vue.customerEmail,
         customerName: vue.customerName,
         description: vue.description,
-        timeIssued: new Date(),
+        timeIssued: new Date().toLocaleString(),
         paid: false
       }, {headers: { 'Authorization': 'JWT ' + vue.user.token }})
         .then(response => {
